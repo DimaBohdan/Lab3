@@ -26,8 +26,15 @@ public class GraphDrawer
             {
                 if (adjacencyMatrix[i, j] == 1)
                 {
+                    // Обработка петли
+                    if (i == j && !processed[i, j])
+                    {
+                        // Рисуем петлю
+                        primitiveDrawer.DrawArrowOnLoop(positions[i], primitiveDrawer.DrawLoop(positions[i], canvas), 25, canvas);
+                        processed[i, j] = true;
+                    }
                     // Проверяем наличие обратной связи
-                    if (adjacencyMatrix[j, i] == 1 && !processed[i, j] && !processed[j, i])
+                    else if (adjacencyMatrix[j, i] == 1 && !processed[i, j] && !processed[j, i])
                     {
                         // Если есть обратная связь, рисуем антипараллельные дуги
                         primitiveDrawer.DrawAntiparallelArcs(positions[i], positions[j], canvas);
@@ -39,7 +46,7 @@ public class GraphDrawer
                     else if (!processed[i, j])
                     {
                         // Если обратной связи нет, рисуем стандартную стрелку
-                        primitiveDrawer.DrawDirectedEdge(positions[i], positions[j], positions, 15, canvas);
+                        primitiveDrawer.DrawDirectedEdge(positions[i], positions[j], positions, 30, canvas);
                         processed[i, j] = true;
                     }
                 }
@@ -48,6 +55,7 @@ public class GraphDrawer
 
         DrawVertices(positions);
     }
+
 
 
     public void DrawUndirectedGraph(int[,] adjacencyMatrix)
@@ -59,7 +67,7 @@ public class GraphDrawer
             {
                 if (adjacencyMatrix[i, j] == 1)
                 {
-                    primitiveDrawer.DrawUndirectedEdge(positions[i], positions[j], positions, 40, canvas);
+                    primitiveDrawer.DrawUndirectedEdge(positions[i], positions[j], positions, 30, canvas);
                 }
             }
         }
@@ -81,7 +89,7 @@ public class GraphDrawer
 
         for (int i = 0; i < n; i++)
         {
-            double angle = 2 * Math.PI * i / n;
+            double angle = 2 * Math.PI * i / (n-1);
             positions[i] = new Point(centerX + radius * Math.Cos(angle), centerY + radius * Math.Sin(angle));
         }
         positions[n - 1] = Center;

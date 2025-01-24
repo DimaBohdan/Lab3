@@ -8,12 +8,13 @@ public class PrimitiveDrawer
 {
     public void DrawVertex(double X, double Y, int vertexNumber, Canvas canvas)
     {
+        MessageBox.Show($"DrawVertex: {X.ToString()}, {Y.ToString()}");
         if (canvas == null) throw new ArgumentNullException(nameof(canvas));
         Grid vertexContainer = new Grid();
         Ellipse vertex = new Ellipse
         {
-            Width = 30,
-            Height = 30,
+            Width = 50,
+            Height = 50,
             Fill = Brushes.Blue
         };
 
@@ -29,8 +30,8 @@ public class PrimitiveDrawer
         vertexContainer.Children.Add(vertex);
         vertexContainer.Children.Add(label);
 
-        Canvas.SetLeft(vertexContainer, X - 15);
-        Canvas.SetTop(vertexContainer, Y - 15);
+        Canvas.SetLeft(vertexContainer, X - 25);
+        Canvas.SetTop(vertexContainer, Y - 25);
 
         canvas.Children.Add(vertexContainer);
     }
@@ -67,7 +68,10 @@ public class PrimitiveDrawer
         }
     }
 
-    private bool IsSelfLoop(Point start, Point end) => start.Equals(end);
+    private bool IsSelfLoop(Point start, Point end)
+    {
+        return start.Equals(end); // If start equals end, it's a loop.
+    }
 
     private bool IsEdgeBlocked(Point start, Point end, Point[] vertexPositions, double minDistance)
     {
@@ -92,20 +96,66 @@ public class PrimitiveDrawer
         return Math.Abs(a * point.X + b * point.Y + c) / Math.Sqrt(a * a + b * b);
     }
 
-    private void DrawLoop(Point vertexPosition, Canvas canvas)
+    public Point DrawLoop(Point vertexPosition, Canvas canvas)
     {
+        double loopRadius = 25; // Радиус петли
+        double canvasCenterX = canvas.ActualWidth / 2;
+        double canvasCenterY = canvas.ActualHeight / 2;
+
+        // Смещение центра петли относительно вершины
+        double offsetX = (vertexPosition.X < canvasCenterX) ? -loopRadius - 10 : loopRadius + 10;
+        double offsetY = (vertexPosition.Y < canvasCenterY) ? -loopRadius - 10 : loopRadius + 10;
+
+        // Если расстояние до центра больше по одной оси, смещаем только по этой оси
+        if (Math.Abs(vertexPosition.X - canvasCenterX) > Math.Abs(vertexPosition.Y - canvasCenterY))
+            offsetY = 0; // Смещение только по X
+        else
+            offsetX = 0; // Смещение только по Y
+
+        // Определяем центр петли
+        Point loopCenter = new Point(vertexPosition.X + offsetX, vertexPosition.Y + offsetY);
+
+        // Рисуем саму петлю (окружность)
         Ellipse loop = new Ellipse
         {
-            Width = 30,
-            Height = 30,
+            Width = loopRadius * 2,
+            Height = loopRadius * 2,
             Stroke = Brushes.Black,
             StrokeThickness = 2
         };
 
-        Canvas.SetLeft(loop, vertexPosition.X - 15);
-        Canvas.SetTop(loop, vertexPosition.Y - 15);
-
+        // Позиционируем петлю
+        Canvas.SetLeft(loop, loopCenter.X - loopRadius);
+        Canvas.SetTop(loop, loopCenter.Y - loopRadius);
         canvas.Children.Add(loop);
+
+        return loopCenter; // Возвращаем центр петли
+    }
+
+    public void DrawArrowOnLoop(Point vertexPosition, Point loopCenter, double loopRadius, Canvas canvas)
+    {
+        // Рассчитываем угол для стрелки: выбираем направление дальше от центра вершины
+        double dx = loopCenter.X - vertexPosition.X;
+        double dy = loopCenter.Y - vertexPosition.Y;
+        double angle = Math.Atan2(dy, dx); // Угол в радианах от вершины до центра петли
+
+        // Смещаем угол на 90 градусов, чтобы стрелка была на окружности петли
+        angle += Math.PI / 2;
+
+        // Координаты точки на окружности петли
+        double arrowX = loopCenter.X + loopRadius * Math.Cos(angle);
+        double arrowY = loopCenter.Y + loopRadius * Math.Sin(angle);
+
+        // Конец стрелки (немного за границей петли, для визуального эффекта)
+        double arrowTipX = arrowX + 5 * Math.Cos(angle);
+        double arrowTipY = arrowY + 5 * Math.Sin(angle);
+
+        // Параметры стрелки
+        Point arrowStart = new Point(arrowX, arrowY);
+        Point arrowEnd = new Point(arrowTipX, arrowTipY);
+
+        // Рисуем стрелку
+        DrawArrow(arrowStart, arrowEnd, canvas);
     }
 
     private void DrawLine(Point start, Point end, Canvas canvas)
@@ -125,60 +175,56 @@ public class PrimitiveDrawer
 
     private void DrawLineWithArrow(Point start, Point end, Canvas canvas)
     {
-        Point adjustedEnd = AdjustPointBeforeVertex(end, start);
-        DrawLine(start, end, canvas);
-        DrawArrow(start, end, canvas);
+        Point adjustedEnd = AdjustPointBeforeVertex(end, start, 25);
+        DrawLine(start, adjustedEnd, canvas);
+        DrawArrow(start, adjustedEnd, canvas);
     }
-
-    private Point AdjustPointBeforeVertex(Point end, Point start)
+    private Point AdjustPointBeforeVertex(Point end, Point start, double offset)
     {
-        double arrowOffset = 15;
         double dx = end.X - start.X;
         double dy = end.Y - start.Y;
         double length = Math.Sqrt(dx * dx + dy * dy);
 
-        if (length == 0) return end;
-
-        dx /= length;
-        dy /= length;
-
-        return new Point(end.X - dx * arrowOffset, end.Y - dy * arrowOffset);
+        if (length != 0)
+        {
+            dx /= length;
+            dy /= length;
+        }
+        return new Point(end.X - dx * offset, end.Y - dy * offset);
     }
 
     private void DrawArrow(Point start, Point end, Canvas canvas)
     {
-        double arrowSize = 5; // Размер стрелки
+        double arrowSize = 5;
         double dx = end.X - start.X;
         double dy = end.Y - start.Y;
         double length = Math.Sqrt(dx * dx + dy * dy);
 
-        if (length == 0) return; // Если начало и конец совпадают, ничего не рисуем
+        if (length != 0)
+        {
+            dx /= length;
+            dy /= length;
+        }
 
-        dx /= length;
-        dy /= length;
-
-        Point adjustedEnd = AdjustPointBeforeVertex(end, start); // Смещение конца стрелки
         Point arrowPoint1 = new Point(
-            adjustedEnd.X - dx * arrowSize + dy * arrowSize,
-            adjustedEnd.Y - dy * arrowSize - dx * arrowSize
+            end.X - dx * arrowSize + dy * arrowSize,
+            end.Y - dy * arrowSize - dx * arrowSize
         );
         Point arrowPoint2 = new Point(
-            adjustedEnd.X - dx * arrowSize - dy * arrowSize,
-            adjustedEnd.Y - dy * arrowSize + dx * arrowSize
+            end.X - dx * arrowSize - dy * arrowSize,
+            end.Y - dy * arrowSize + dx * arrowSize
         );
-
 
         Polygon arrowHead = new Polygon
         {
-            Points = new PointCollection { adjustedEnd, arrowPoint1, arrowPoint2 },
-            Fill = Brushes.Red, // Заливка красным цветом
-            Stroke = Brushes.Red, // Рамка стрелки
-            StrokeThickness = 1 // Толщина рамки
+            Points = new PointCollection { end, arrowPoint1, arrowPoint2 },
+            Fill = Brushes.Red,
+            Stroke = Brushes.Red,
+            StrokeThickness = 1
         };
 
         canvas.Children.Add(arrowHead);
     }
-
 
     private void DrawArc(Point start, Point end, Canvas canvas)
     {
@@ -198,8 +244,9 @@ public class PrimitiveDrawer
 
     private void DrawArcWithArrow(Point start, Point end, Canvas canvas)
     {
-        DrawArc(start, end, canvas);
-        DrawArrow(start, end, canvas);
+        Point adjustedEnd = AdjustPointBeforeVertex(end, start, 25);
+        DrawArc(start, adjustedEnd, canvas);
+        DrawArrow(CalculateArcControlPoint(start, adjustedEnd), adjustedEnd, canvas);
     }
 
     private Point CalculateArcControlPoint(Point start, Point end)
@@ -207,24 +254,29 @@ public class PrimitiveDrawer
         double midX = (start.X + end.X) / 2;
         double midY = (start.Y + end.Y) / 2;
 
-        double offset = 50;
+        double offset = 60;
         double dx = end.X - start.X;
         double dy = end.Y - start.Y;
         double length = Math.Sqrt(dx * dx + dy * dy);
 
-        dx /= length;
-        dy /= length;
+        if (length != 0)
+        {
+            dx /= length;
+            dy /= length;
+        }
 
         return new Point(midX - dy * offset, midY + dx * offset);
     }
+
     public void DrawAntiparallelArcs(Point start, Point end, Canvas canvas)
     {
-        double offset = 50; // Смещение дуг для разделения
+
         DrawArcWithArrow(start, end, canvas);
         DrawArcWithArrow(end, start, canvas);
     }
-
 }
+
+
 
 
 
