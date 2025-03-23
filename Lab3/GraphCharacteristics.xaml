@@ -1,0 +1,22 @@
+﻿<Window x:Class="Lab3.GraphCharacteristics"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Lab3"
+        mc:Ignorable="d"
+        Title="GraphCharacteristics" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <TextBlock x:Name="GraphInfoText" TextWrapping="Wrap" FontSize="14" Padding="5"/>
+        </ScrollViewer>
+
+        <DataGrid x:Name="AdjacencyMatrixGrid" Grid.Column="1" 
+                  AutoGenerateColumns="False" HeadersVisibility="All"/>
+    </Grid>
+</Window>
