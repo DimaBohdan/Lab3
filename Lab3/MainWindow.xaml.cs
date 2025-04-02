@@ -82,8 +82,7 @@ namespace Lab3
             int[,] searchMatrix = new int[n, n];
             int[] nodeInfo = new int[n];
             Queue<int> queue = new Queue<int>();
-            int k = 1;
-
+            int k = 0;
             for (int startNode = 0; startNode < n; startNode++)
             {
                 double offset = Constants.offset;
@@ -93,13 +92,13 @@ namespace Lab3
 
                 queue.Enqueue(startNode);
                 nodeInfo[startNode] = ++k;
-                GraphDrawer.DrawVertex(points[startNode], startNode+1, Brushes.Brown, canvas);
+                GraphDrawer.DrawVertex(points[startNode], startNode + 1, Brushes.Brown, canvas);
                 await WaitForNextStep();
 
                 while (queue.Count > 0)
                 {
                     int node = queue.Dequeue();
-                    GraphDrawer.DrawVertex(points[startNode], startNode+1, Brushes.OrangeRed, canvas);
+                    GraphDrawer.DrawVertex(points[node], node + 1, Brushes.OrangeRed, canvas);
                     await WaitForNextStep();
 
                     for (int neighbor = 0; neighbor < n; neighbor++)
@@ -110,27 +109,27 @@ namespace Lab3
                             nodeInfo[neighbor] = ++k;
                             searchMatrix[node, neighbor] = 1;
                             GraphDrawer.DrawDirectedEdge(points[node], points[neighbor], graph.VertexCoordinates, offset, Brushes.Green, canvas);
-                            GraphDrawer.DrawVertex(points[neighbor], neighbor+1, Brushes.Brown, canvas);
+                            GraphDrawer.DrawVertex(points[neighbor], neighbor + 1, Brushes.Brown, canvas);
                             await WaitForNextStep();
                         }
                     }
 
-                    GraphDrawer.DrawVertex(points[node], node+1, Brushes.Indigo, canvas);
+                    GraphDrawer.DrawVertex(points[node], node + 1, Brushes.Indigo, canvas);
                     await WaitForNextStep();
                 }
             }
-            SearchRemainingVertices(graph, nodeInfo, k);
+
+            EnsureAllVerticesNumbered(graph, nodeInfo, ref k);
             return (searchMatrix, nodeInfo);
         }
 
-        private static void SearchRemainingVertices(DirectedGraph graph, int[] nodeInfo, int k)
+        private static void EnsureAllVerticesNumbered(DirectedGraph graph, int[] nodeInfo, ref int k)
         {
             for (int i = 0; i < graph.Vertices; i++)
             {
                 if (nodeInfo[i] == 0)
                 {
-                    k++;
-                    nodeInfo[i] = k;
+                    nodeInfo[i] = ++k;
                 }
             }
         }
@@ -150,7 +149,7 @@ namespace Lab3
                 }
             }
 
-            SearchRemainingVertices(graph, nodeInfo, k);
+            EnsureAllVerticesNumbered(graph, nodeInfo, ref k);
             return (searchMatrix, nodeInfo);
         }
 
@@ -205,13 +204,17 @@ namespace Lab3
             {
                 GraphCanvas.Children.Clear();
                 Generate_GraphFirstly();
-                await BFSearch(graph, GraphCanvas);
+                var (matrix, renumbering) = await BFSearch(graph, GraphCanvas);
+                SearchTreeMatrixWindow matrixWindow = new SearchTreeMatrixWindow(matrix, renumbering);
+                matrixWindow.Show();
             }
             else if (e.Key == Key.D)
             {
                 GraphCanvas.Children.Clear();
                 Generate_GraphFirstly();
-                await DFSearch(graph, GraphCanvas);
+                var (matrix, renumbering) = await DFSearch(graph, GraphCanvas);
+                SearchTreeMatrixWindow matrixWindow = new SearchTreeMatrixWindow(matrix, renumbering);
+                matrixWindow.Show();
             }
         }
     }

@@ -521,8 +521,7 @@ namespace Lab3
                 }
                 sb.Append("\r\n");
             }
-            return sb.ToString();
-        }
+            return sb.ToString();        }
     }
 }
 
