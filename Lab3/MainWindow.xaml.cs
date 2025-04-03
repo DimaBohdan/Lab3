@@ -8,6 +8,7 @@ namespace Lab3
     public partial class MainWindow : Window
     {
         private DirectedGraph graph;
+        private WeightedGraph weightedGraph;
         private double[] coefs = Constants.lab3_coefs;
         private bool continueDrawing;
 
@@ -69,10 +70,10 @@ namespace Lab3
                 MessageBox.Show("Please enter a valid 4-digit number.");
                 return;
             }
-            WeightedGraph graph = new WeightedGraph(seed, coefs, GraphCanvas.ActualWidth, GraphCanvas.ActualHeight);
+            weightedGraph = new WeightedGraph(seed, coefs, GraphCanvas.ActualWidth, GraphCanvas.ActualHeight);
             GraphDrawer.WeightedGraphDrawer drawer = new GraphDrawer.WeightedGraphDrawer();
-            drawer.DrawGraph(graph, GraphCanvas);
-            MatrixWindow matrixWindow = new MatrixWindow(graph);
+            drawer.DrawGraph(weightedGraph, GraphCanvas);
+            MatrixWindow matrixWindow = new MatrixWindow(weightedGraph);
             matrixWindow.Show();
         }
 
@@ -192,6 +193,13 @@ namespace Lab3
                 MessageBox.Show("Please generate a graph first.");
             }
         }
+        private void Generate_WeightedGraphFirstly()
+        {
+            if (weightedGraph == null)
+            {
+                MessageBox.Show("Please generate a graph first.");
+            }
+        }
 
         private async void Window_KeyDown(object sender, KeyEventArgs e)
         {
@@ -216,6 +224,33 @@ namespace Lab3
                 SearchTreeMatrixWindow matrixWindow = new SearchTreeMatrixWindow(matrix, renumbering);
                 matrixWindow.Show();
             }
+            else if (e.Key == Key.S)
+            {
+                GraphCanvas.Children.Clear();
+                Generate_WeightedGraphFirstly();
+
+                var edgeList = GraphCharacteristic.GetMinSpanningTreePrima(weightedGraph);
+                var node = edgeList.GetFirst();
+                var points = weightedGraph.VertexCoordinates;
+                double offset = Constants.offset;
+
+                while (node != null)
+                {
+                    await DrawGraphStep(node.value, points, offset);
+                    node = node.next;
+                }
+            }
+        }
+
+        private async Task DrawGraphStep(Edge edge, Point[] points, double offset)
+        {
+            int start = edge.Vertex1;
+            int end = edge.Vertex2;
+            GraphDrawer.DrawUndirectedEdge(points[start], points[end], points, offset, Brushes.Green, GraphCanvas);
+            GraphDrawer.WeightedGraphDrawer.DrawEdgeWeight(points[start], points[end], weightedGraph.WeightedMatrix[start, end], Brushes.Green, GraphCanvas);
+            GraphDrawer.DrawVertex(points[start], start+1, Brushes.Brown, GraphCanvas);
+            GraphDrawer.DrawVertex(points[end], end+1, Brushes.Brown, GraphCanvas);
+            await WaitForNextStep();
         }
     }
 }

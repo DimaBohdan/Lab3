@@ -313,7 +313,6 @@ namespace Lab3
                     sccs.Add(scc);
                 }
             }
-            // add not connected vertices to assignedVertices
             for (int i = 0; i < length; i++)
             {
                 if (!assignedVertices.Contains(i))
@@ -519,9 +518,11 @@ namespace Lab3
                 {
                     sb.Append($"({edge.Vertex1 + 1}, {edge.Vertex2 + 1}) ");
                 }
+                sb.Append($"Minimum Spanning Tree Weight: { minSpanningTree.TotalWeight() }");
                 sb.Append("\r\n");
             }
-            return sb.ToString();        }
+            return sb.ToString();        
+        }
     }
 }
 

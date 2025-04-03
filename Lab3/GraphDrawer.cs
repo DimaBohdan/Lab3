@@ -100,7 +100,7 @@ namespace Lab3
                 DrawVertices(positions, canvas);
             }
 
-            private void DrawEdgeWeight(Point start, Point end, double weight, Brush color, Canvas canvas)
+            public static void DrawEdgeWeight(Point start, Point end, double weight, Brush color, Canvas canvas)
             {
                 double midX = (start.X + end.X) / 2;
                 double midY = (start.Y + end.Y) / 2;
@@ -130,7 +130,6 @@ namespace Lab3
 
                 canvas.Children.Add(container);
             }
-
 
             private static Brush GetRandomColor()
             {
